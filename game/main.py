@@ -1,3 +1,6 @@
+from game.board import Board
+from game.character import Character
+
 if __name__ == '__main__':
 
     print("""\n
@@ -14,3 +17,29 @@ if __name__ == '__main__':
           ███████║ ██║  ██║ ╚██████╔╝ ██║  ██║                             
           ╚══════╝ ╚═╝  ╚═╝  ╚═════╝  ╚═╝  ╚═╝                                                                           
     \n""")
+
+character1 = Character(
+    (0,0),
+    (5, 5),
+    "@"
+)
+
+character2 = Character(
+    (2, 11),
+    (1, 7),
+    "#"
+)
+
+board = Board(
+    15,
+    5
+)
+
+characters = [character1, character2]
+
+# Game loop
+for i in range(1, 10):
+    print("Game #", i)
+    character1.move()
+    character2.move()
+    board.print(characters)
