@@ -1,9 +1,10 @@
 from game.board import Board
 from game.character import Character
 
-if __name__ == '__main__':
+if __name__ == "__main__":
 
-    print("""\n
+    print(
+        """\n
 ██╗     ███████╗██╗   ██╗███████╗██╗         ██╗   ██╗██████╗ 
 ██║     ██╔════╝██║   ██║██╔════╝██║         ██║   ██║██╔══██╗
 ██║     █████╗  ██║   ██║█████╗  ██║         ██║   ██║██████╔╝
@@ -16,24 +17,14 @@ if __name__ == '__main__':
           ╚════██║ ██╔══██║ ██║   ██║ ██╔══██║                             
           ███████║ ██║  ██║ ╚██████╔╝ ██║  ██║                             
           ╚══════╝ ╚═╝  ╚═╝  ╚═════╝  ╚═╝  ╚═╝                                                                           
-    \n""")
+    \n"""
+    )
 
-character1 = Character(
-    (0,0),
-    (5, 5),
-    "@"
-)
+character1 = Character((0, 0), (5, 5), "@")
 
-character2 = Character(
-    (2, 11),
-    (1, 7),
-    "#"
-)
+character2 = Character((2, 11), (1, 7), "#")
 
-board = Board(
-    15,
-    5
-)
+board = Board(15, 5)
 
 characters = [character1, character2]
 

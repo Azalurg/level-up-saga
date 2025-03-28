@@ -1,6 +1,7 @@
 from typing import List
 from .character import Character
 
+
 class Board(object):
     def __init__(self, width, height, field: chr = "."):
         self.width = width
