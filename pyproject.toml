@@ -1,0 +1,18 @@
+[project]
+name = "level-up-saga"
+version = "0.1.0"
+description = ""
+authors = [
+    {name = "Azalurg",email = "91213389+Azalurg@users.noreply.github.com"}
+]
+readme = "README.md"
+requires-python = ">=3.13"
+dependencies = [
+    "numpy (>=2.2.4,<3.0.0)",
+    "pygame (>=2.6.1,<3.0.0)"
+]
+
+
+[build-system]
+requires = ["poetry-core>=2.0.0,<3.0.0"]
+build-backend = "poetry.core.masonry.api"
