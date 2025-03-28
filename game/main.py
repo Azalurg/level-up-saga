@@ -1,5 +1,5 @@
-from game.board import Board
-from game.character import Character
+from game.entities.character import CharacterBase
+from game.logic.game import Game
 
 if __name__ == "__main__":
 
@@ -20,17 +20,8 @@ if __name__ == "__main__":
     \n"""
     )
 
-character1 = Character((0, 0), (5, 5), "@")
-
-character2 = Character((2, 11), (1, 7), "#")
-
-board = Board(15, 5)
-
-characters = [character1, character2]
-
-# Game loop
-for i in range(1, 10):
-    print("Game #", i)
-    character1.move()
-    character2.move()
-    board.print(characters)
+    game = Game()
+    game.allies = [
+        CharacterBase(1, 1, (30, 30, 200)),
+    ]
+    game.run()
