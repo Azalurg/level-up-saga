@@ -21,7 +21,4 @@ if __name__ == "__main__":
     )
 
     game = Game()
-    game.allies = [
-        CharacterBase(1, 1, (30, 30, 200)),
-    ]
     game.run()
