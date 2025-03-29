@@ -5,14 +5,15 @@ from typing import List
 import pygame
 
 from game.config import ENEMY_AREA, COLORS, WIDTH, GRID_SIZE, HEIGHT, PLAYER_AREA
-from game.entities.character import CharacterBase
+from game.entities.character import BaseCharacter
 
 
 class GameState(EnumMeta):
-    SETUP = 'SETUP'
-    BATTLE = 'BATTLE'
-    LOST = 'LOST'
-    VICTORY = 'VICTORY'
+    SETUP = "SETUP"
+    BATTLE = "BATTLE"
+    LOST = "LOST"
+    VICTORY = "VICTORY"
+
 
 # class Game:
 #     def __init__(self):
@@ -21,48 +22,48 @@ class GameState(EnumMeta):
 #         self.enemies = []
 #         self.screen_size = (890, 550)
 
-    # def run(self):
-    #     # Główna pętla gry
-    #     pygame.init()
-    #     screen = pygame.display.set_mode(self.screen_size)
-    #     clock = pygame.time.Clock()
-    #
-    #     while True:
-    #         dt = clock.tick(60) / 1000.0
-    #
-    #         for event in pygame.event.get():
-    #             if event.type == pygame.QUIT:
-    #                 break
-    #
-    #         # Logika gry
-    #         # for ally in self.allies:
-    #         #     ally.update()
-    #         # for enemy in self.enemies:
-    #         #     enemy.update()
-    #
-    #         for ally in self.allies:
-    #             ally.draw(screen)
-    #         for enemy in self.enemies:
-    #             enemy.draw(screen)
-    #
-    #         # Rysowanie
-    #         screen.fill((30, 30, 30))
-    #         for ally in self.allies:
-    #             ally.draw(screen)
-    #         for enemy in self.enemies:
-    #             enemy.draw(screen)
-    #
-    #         pygame.display.flip()
-    #
-    #     pygame.quit()
+# def run(self):
+#     # Główna pętla gry
+#     pygame.init()
+#     screen = pygame.display.set_mode(self.screen_size)
+#     clock = pygame.time.Clock()
+#
+#     while True:
+#         dt = clock.tick(60) / 1000.0
+#
+#         for event in pygame.event.get():
+#             if event.type == pygame.QUIT:
+#                 break
+#
+#         # Logika gry
+#         # for ally in self.allies:
+#         #     ally.update()
+#         # for enemy in self.enemies:
+#         #     enemy.update()
+#
+#         for ally in self.allies:
+#             ally.draw(screen)
+#         for enemy in self.enemies:
+#             enemy.draw(screen)
+#
+#         # Rysowanie
+#         screen.fill((30, 30, 30))
+#         for ally in self.allies:
+#             ally.draw(screen)
+#         for enemy in self.enemies:
+#             enemy.draw(screen)
+#
+#         pygame.display.flip()
+#
+#     pygame.quit()
 
 
 class Game:
     def __init__(self, wave=0):
         self.state = GameState.SETUP
         self.wave = wave
-        self.allies: List[CharacterBase] = []
-        self.enemies: List[CharacterBase] = []
+        self.allies: List[BaseCharacter] = []
+        self.enemies: List[BaseCharacter] = []
         self.selected_unit = None
         self.result_text = ""
 
@@ -72,7 +73,7 @@ class Game:
         for _ in range(num_enemies):
             x = random.randint(ENEMY_AREA[0], ENEMY_AREA[0] + ENEMY_AREA[2] - 1)
             y = random.randint(ENEMY_AREA[1], ENEMY_AREA[1] + ENEMY_AREA[3] - 1)
-            self.enemies.append(CharacterBase(x, y, COLORS["enemy"]))
+            self.enemies.append(BaseCharacter(x, y, COLORS["enemy"]))
 
     def check_victory(self):
         if not self.enemies:
@@ -90,7 +91,7 @@ class Game:
         dragging = False
 
         while True:
-            dt = clock.tick(60) / 1000.0
+            dt = clock.tick(24) / 1000.0
             screen.fill(COLORS["background"])
 
             # Rysuj siatkę
@@ -104,13 +105,13 @@ class Game:
                 PLAYER_AREA[0] * GRID_SIZE,
                 PLAYER_AREA[1] * GRID_SIZE,
                 PLAYER_AREA[2] * GRID_SIZE,
-                PLAYER_AREA[3] * GRID_SIZE
+                PLAYER_AREA[3] * GRID_SIZE,
             )
             enemy_zone_rect = pygame.Rect(
                 ENEMY_AREA[0] * GRID_SIZE,
                 ENEMY_AREA[1] * GRID_SIZE,
                 ENEMY_AREA[2] * GRID_SIZE,
-                ENEMY_AREA[3] * GRID_SIZE
+                ENEMY_AREA[3] * GRID_SIZE,
             )
 
             pygame.draw.rect(screen, COLORS["player_zone"], player_zone_rect, 2)
@@ -122,15 +123,21 @@ class Game:
                     pygame.quit()
                     return
 
-                elif event.type == pygame.MOUSEBUTTONDOWN and self.state == GameState.SETUP:
+                elif (
+                    event.type == pygame.MOUSEBUTTONDOWN
+                    and self.state == GameState.SETUP
+                ):
                     pos = pygame.mouse.get_pos()
                     grid_x = pos[0] // GRID_SIZE
                     grid_y = pos[1] // GRID_SIZE
 
-                    # Sprawdź czy miejsce należy do strefy gracza
+                    # Sprawdź, czy miejsce należy do strefy gracza
                     if PLAYER_AREA[0] <= grid_x < PLAYER_AREA[0] + PLAYER_AREA[2]:
                         if PLAYER_AREA[1] <= grid_y < PLAYER_AREA[1] + PLAYER_AREA[3]:
-                            self.selected_unit = CharacterBase(grid_x, grid_y, COLORS["ally"])
+                            self.selected_unit = BaseCharacter(
+                                grid_x, grid_y, COLORS["ally"]
+                            )
+                            self.selected_unit.attack += self.wave
                             self.selected_unit.rect.center = pos
                             dragging = True
 
@@ -142,8 +149,10 @@ class Game:
                     grid_x = self.selected_unit.rect.x // GRID_SIZE
                     grid_y = self.selected_unit.rect.y // GRID_SIZE
 
-                    if (PLAYER_AREA[0] <= grid_x < PLAYER_AREA[0] + PLAYER_AREA[2] and
-                            PLAYER_AREA[1] <= grid_y < PLAYER_AREA[1] + PLAYER_AREA[3]):
+                    if (
+                        PLAYER_AREA[0] <= grid_x < PLAYER_AREA[0] + PLAYER_AREA[2]
+                        and PLAYER_AREA[1] <= grid_y < PLAYER_AREA[1] + PLAYER_AREA[3]
+                    ):
                         self.allies.append(self.selected_unit)
                     else:
                         # Nieprawidłowa pozycja - anuluj
@@ -153,11 +162,13 @@ class Game:
                     dragging = False
 
                 elif event.type == pygame.KEYDOWN:
-                    print(event.key, pygame.K_r)
                     if event.key == pygame.K_SPACE and self.state == GameState.SETUP:
                         self.spawn_wave()
                         self.state = GameState.BATTLE
-                    elif event.key == pygame.K_r and self.state in (GameState.LOST, GameState.VICTORY):
+                    elif event.key == pygame.K_r and self.state in (
+                        GameState.LOST,
+                        GameState.VICTORY,
+                    ):
                         self.__init__()
                         continue
                     elif event.key == pygame.K_c and self.state == GameState.VICTORY:
@@ -188,15 +199,23 @@ class Game:
 
             # Teksty
             if self.state == GameState.SETUP:
-                text = font.render(f"WAVE {self.wave + 1} - PRESS SPACE TO START", True, COLORS["text"])
+                text = font.render(
+                    f"WAVE {self.wave + 1} - PRESS SPACE TO START", True, COLORS["text"]
+                )
                 screen.blit(text, (WIDTH // 2 - text.get_width() // 2, HEIGHT - 100))
             elif self.state in (GameState.LOST, GameState.VICTORY):
                 text = font.render(self.result_text, True, COLORS["text"])
-                screen.blit(text, (WIDTH // 2 - text.get_width() // 2, HEIGHT // 2 - 50))
+                screen.blit(
+                    text, (WIDTH // 2 - text.get_width() // 2, HEIGHT // 2 - 50)
+                )
                 text = font.render("PRESS R TO RESTART", True, COLORS["text"])
-                screen.blit(text, (WIDTH // 2 - text.get_width() // 2, HEIGHT // 2 + 50))
+                screen.blit(
+                    text, (WIDTH // 2 - text.get_width() // 2, HEIGHT // 2 + 50)
+                )
                 if self.state == GameState.VICTORY:
                     text = font.render("PRESS C TO CONTINUE", True, COLORS["text"])
-                    screen.blit(text, (WIDTH // 2 - text.get_width() // 2, HEIGHT // 2 + 100))
+                    screen.blit(
+                        text, (WIDTH // 2 - text.get_width() // 2, HEIGHT // 2 + 100)
+                    )
 
             pygame.display.flip()

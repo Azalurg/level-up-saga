@@ -1,4 +1,4 @@
-from game.entities.character import CharacterBase
+from game.entities.character import BaseCharacter
 from game.logic.game import Game
 
 if __name__ == "__main__":

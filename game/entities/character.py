@@ -7,75 +7,99 @@ from pygame import Rect
 
 from game.config import GRID_SIZE
 
-class CharacterBase:
+
+class BaseCharacter:
     id: str
     hp: int
     max_hp: int
     attack: int
     range: int
     cooldown: int
+    base_cooldown: int
     color: Tuple[int, int, int]
-    # team: str
     rect: Rect
-    enemies: dict
+    targets_distance: dict
+    in_range: list
     speed: int
 
     def __init__(self, x, y, color):
         self.hp = 100
         self.max_hp = 100
         self.attack = 10
-        self.range = 5
+        self.range = 0.5 * GRID_SIZE
         self.cooldown = 0
+        self.base_cooldown = 1
         self.color = color
         self.speed = 200
+        self.targets_distance = {}
+        self.in_range = []
+        self.size = 0
 
         self.id = str(hash(f"{x}{y}{random()}"))
 
-        self.rect = Rect(x*GRID_SIZE + 1, y*GRID_SIZE + 1, GRID_SIZE - 2, GRID_SIZE - 2)
+        self.rect = Rect(
+            x * GRID_SIZE + self.size / 2,
+            y * GRID_SIZE + self.size / 2,
+            GRID_SIZE - self.size / 2,
+            GRID_SIZE - self.size / 2,
+        )
 
     def draw(self, surface):
         pygame.draw.rect(surface, self.color, self.rect)
 
         # Health bar
         health_width = (self.rect.width - 4) * (self.hp / self.max_hp)
-        pygame.draw.rect(surface, (150, 30, 30), (self.rect.x + 2, self.rect.y - 15, self.rect.width - 4, 8))
-        pygame.draw.rect(surface, (50, 150, 50), (self.rect.x + 2, self.rect.y - 15, health_width, 8))
+        pygame.draw.rect(
+            surface,
+            (150, 30, 30),
+            (self.rect.x + 2, self.rect.y - 15, self.rect.width - 4, 8),
+        )
+        pygame.draw.rect(
+            surface, (50, 150, 50), (self.rect.x + 2, self.rect.y - 15, health_width, 8)
+        )
 
-    def find_target(self, targets):
-        closest = None
-        min_dist = float('inf')
+    def calculate_distance(self, targets):
+        self.in_range = []
+        self.targets_distance = {}
+
         for target in targets:
-            if target.hp <= 0:
-                continue
-            dx = self.rect.centerx - target.rect.centerx
-            dy = self.rect.centery - target.rect.centery
-            distance = math.hypot(dx, dy)
-            if distance < min_dist and distance <= self.range * GRID_SIZE:
-                closest = target
-                min_dist = distance
-        return closest
+            dx = target.rect.centerx - self.rect.centerx
+            dy = target.rect.centery - self.rect.centery
+            distance = math.hypot(abs(dx), abs(dy))
+            if distance <= self.range:
+                self.in_range.append(target)
+            self.targets_distance[distance] = (dx, dy)
 
-    def update(self, dt, targets):
+    def select_target(self):
+        target = None
+        if self.in_range:
+            target = min(self.in_range, key=lambda a: a.hp)
+
+        return target
+
+    def update(self, delta_time, targets):
         if self.hp <= 0:
             return
 
-        if self.cooldown > 0:
-            self.cooldown -= dt
+        if not targets:
+            return
 
-        target = self.find_target(targets)
+        if self.cooldown > 0:
+            self.cooldown -= delta_time
+
+        self.calculate_distance(targets)
+
+        target = self.select_target()
+
         if target and self.cooldown <= 0:
             target.hp -= self.attack
-            self.cooldown = 1
+            self.cooldown = self.base_cooldown
         if not target:
             # Move towards closest ally
             if targets:
-                closest = min(targets, key=lambda a: math.hypot(
-                    self.rect.centerx - a.rect.centerx,
-                    self.rect.centery - a.rect.centery
-                ))
-                dx = closest.rect.centerx - self.rect.centerx
-                dy = closest.rect.centery - self.rect.centery
-                distance = math.hypot(dx, dy)
+                distance = min(self.targets_distance)
+                dx, dy = self.targets_distance[distance]
                 if distance > 0:
-                    self.rect.x += dx / distance * self.speed * dt
-                    self.rect.y += dy / distance * self.speed * dt
+                    self.rect.x += dx / distance * self.speed * delta_time
+                    self.rect.y += dy / distance * self.speed * delta_time
+                    print(self.id, self.rect.x, self.rect.y, distance)
