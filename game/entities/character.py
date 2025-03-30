@@ -3,9 +3,10 @@ from random import random
 from typing import Tuple
 
 import pygame
-from pygame import Rect
 
-from game.config import GRID_SIZE
+from game.config import GRID_SIZE, HEALTH_BAR_HEIGHT, HEALTH_BAR_GAP
+from game.ui.shapes._base import BaseShape
+from game.ui.shapes.square import Square
 
 
 class BaseCharacter:
@@ -17,54 +18,64 @@ class BaseCharacter:
     cooldown: int
     base_cooldown: int
     color: Tuple[int, int, int]
-    rect: Rect
+    shape: BaseShape
     targets_distance: dict
     in_range: list
     speed: int
 
-    def __init__(self, x, y, color):
+    def __init__(self, x, y, color, scale=0.65):
+        self.id = hash(f"{x}{y}{random()}")
         self.hp = 100
         self.max_hp = 100
         self.attack = 10
-        self.range = 0.5 * GRID_SIZE
+        self.range = 1 * GRID_SIZE
         self.cooldown = 0
         self.base_cooldown = 1
         self.color = color
         self.speed = 200
         self.targets_distance = {}
         self.in_range = []
-        self.size = 7
+        self.scale = scale
 
-        self.id = hash(f"{x}{y}{random()}")
+        self.shape = Square(x, y, color, self.scale)
 
-        self.rect = Rect(
-            x * GRID_SIZE + self.size / 2,
-            y * GRID_SIZE + self.size / 2,
-            GRID_SIZE - self.size,
-            GRID_SIZE - self.size,
+    def _draw_health_bar(self, surface):
+        max_health_width = int(self.shape.width * 0.81)
+        health_width = max_health_width * (self.hp / self.max_hp)
+        health_x = self.shape.centerx - int(self.shape.halfwidth * 0.81)
+        health_y = (
+            self.shape.centery
+            - self.shape.halfheight
+            - HEALTH_BAR_HEIGHT
+            - HEALTH_BAR_GAP
         )
-
-    def draw(self, surface):
-        pygame.draw.rect(surface, self.color, self.rect)
-
-        # Health bar
-        health_width = (self.rect.width - 4) * (self.hp / self.max_hp)
         pygame.draw.rect(
             surface,
             (150, 30, 60),
-            (self.rect.x + 2, self.rect.y - 15, self.rect.width - 4, 8),
+            (
+                health_x,
+                health_y,
+                max_health_width,
+                HEALTH_BAR_HEIGHT,
+            ),
         )
         pygame.draw.rect(
-            surface, (50, 150, 50), (self.rect.x + 2, self.rect.y - 15, health_width, 8)
+            surface,
+            (50, 150, 50),
+            (health_x, health_y, health_width, HEALTH_BAR_HEIGHT),
         )
+
+    def draw(self, surface):
+        self.shape.draw(surface)
+        self._draw_health_bar(surface)
 
     def calculate_distance(self, targets):
         self.in_range = []
         self.targets_distance = {}
 
         for target in targets:
-            dx = target.rect.centerx - self.rect.centerx
-            dy = target.rect.centery - self.rect.centery
+            dx = target.shape.centerx - self.shape.centerx
+            dy = target.shape.centery - self.shape.centery
             distance = math.hypot(abs(dx), abs(dy))
             if distance <= self.range:
                 self.in_range.append(target)
@@ -100,5 +111,5 @@ class BaseCharacter:
                 distance = min(self.targets_distance)
                 dx, dy = self.targets_distance[distance]
                 if distance > 0:
-                    self.rect.x += dx / distance * self.speed * delta_time
-                    self.rect.y += dy / distance * self.speed * delta_time
+                    self.shape.centerx += dx / distance * self.speed * delta_time
+                    self.shape.centery += dy / distance * self.speed * delta_time

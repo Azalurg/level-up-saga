@@ -13,3 +13,6 @@ COLORS = {
     "enemy": (200, 80, 20),
     "text": (200, 200, 0),
 }
+
+HEALTH_BAR_HEIGHT = 5
+HEALTH_BAR_GAP = 2
