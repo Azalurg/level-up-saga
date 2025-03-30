@@ -5,7 +5,7 @@ from typing import Tuple
 import pygame
 
 from game.config import GRID_SIZE, HEALTH_BAR_HEIGHT, HEALTH_BAR_GAP
-from game.ui.shapes._base import BaseShape
+from game.ui.shapes.base import BaseShape
 from game.ui.shapes.square import Square
 
 
@@ -37,7 +37,7 @@ class BaseCharacter:
         self.in_range = []
         self.scale = scale
 
-        self.shape = Square(x, y, color, self.scale)
+        self.shape = Square(x, y, color, self.scale)  # TODO: Move to separate method
 
     def _draw_health_bar(self, surface):
         max_health_width = int(self.shape.width * 0.81)

@@ -6,7 +6,9 @@ import pygame
 
 from game.config import ENEMY_AREA, COLORS, WIDTH, GRID_SIZE, HEIGHT, PLAYER_AREA
 from game.entities.character import BaseCharacter
+from game.entities.characters.archer import Archer
 from game.entities.characters.knight import Knight
+from game.entities.characters.wizard import Wizard
 
 
 class GameState(EnumMeta):
@@ -34,10 +36,13 @@ class Game:
         for _ in range(num_enemies):
             x = random.randint(ENEMY_AREA[0], ENEMY_AREA[0] + ENEMY_AREA[2] - 1)
             y = random.randint(ENEMY_AREA[1], ENEMY_AREA[1] + ENEMY_AREA[3] - 1)
-            if random.random() < 0.5:
+            r = random.random()
+            if r < 0.3:
                 self.enemies.append(Knight(x, y, COLORS["enemy"]))
+            elif r < 0.6:
+                self.enemies.append(Wizard(x, y, COLORS["enemy"]))
             else:
-                self.enemies.append(BaseCharacter(x, y, COLORS["enemy"]))
+                self.enemies.append(Archer(x, y, COLORS["enemy"]))
 
     def check_victory(self):
         if not self.enemies:
@@ -94,7 +99,6 @@ class Game:
                     pos = pygame.mouse.get_pos()
                     grid_x = pos[0] // GRID_SIZE
                     grid_y = pos[1] // GRID_SIZE
-                    print(grid_x, grid_y)
 
                     self.selected_unit = BaseCharacter(grid_x, grid_y, COLORS["ally"])
                     self.selected_unit.attack += self.wave

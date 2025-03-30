@@ -1,7 +1,7 @@
 import pygame
 
 from game.config import GRID_SIZE
-from game.ui.shapes._base import BaseShape
+from game.ui.shapes.base import BaseShape
 
 
 class Square(BaseShape):
