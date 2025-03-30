@@ -9,7 +9,7 @@ from game.config import GRID_SIZE
 
 
 class BaseCharacter:
-    id: str
+    id: int
     hp: int
     max_hp: int
     attack: int
@@ -33,15 +33,15 @@ class BaseCharacter:
         self.speed = 200
         self.targets_distance = {}
         self.in_range = []
-        self.size = 0
+        self.size = 7
 
-        self.id = str(hash(f"{x}{y}{random()}"))
+        self.id = hash(f"{x}{y}{random()}")
 
         self.rect = Rect(
             x * GRID_SIZE + self.size / 2,
             y * GRID_SIZE + self.size / 2,
-            GRID_SIZE - self.size / 2,
-            GRID_SIZE - self.size / 2,
+            GRID_SIZE - self.size,
+            GRID_SIZE - self.size,
         )
 
     def draw(self, surface):
@@ -51,7 +51,7 @@ class BaseCharacter:
         health_width = (self.rect.width - 4) * (self.hp / self.max_hp)
         pygame.draw.rect(
             surface,
-            (150, 30, 30),
+            (150, 30, 60),
             (self.rect.x + 2, self.rect.y - 15, self.rect.width - 4, 8),
         )
         pygame.draw.rect(
@@ -102,4 +102,3 @@ class BaseCharacter:
                 if distance > 0:
                     self.rect.x += dx / distance * self.speed * delta_time
                     self.rect.y += dy / distance * self.speed * delta_time
-                    print(self.id, self.rect.x, self.rect.y, distance)

@@ -15,49 +15,6 @@ class GameState(EnumMeta):
     VICTORY = "VICTORY"
 
 
-# class Game:
-#     def __init__(self):
-#         self.state = GameState.SETUP
-#         self.allies = []
-#         self.enemies = []
-#         self.screen_size = (890, 550)
-
-# def run(self):
-#     # Główna pętla gry
-#     pygame.init()
-#     screen = pygame.display.set_mode(self.screen_size)
-#     clock = pygame.time.Clock()
-#
-#     while True:
-#         dt = clock.tick(60) / 1000.0
-#
-#         for event in pygame.event.get():
-#             if event.type == pygame.QUIT:
-#                 break
-#
-#         # Logika gry
-#         # for ally in self.allies:
-#         #     ally.update()
-#         # for enemy in self.enemies:
-#         #     enemy.update()
-#
-#         for ally in self.allies:
-#             ally.draw(screen)
-#         for enemy in self.enemies:
-#             enemy.draw(screen)
-#
-#         # Rysowanie
-#         screen.fill((30, 30, 30))
-#         for ally in self.allies:
-#             ally.draw(screen)
-#         for enemy in self.enemies:
-#             enemy.draw(screen)
-#
-#         pygame.display.flip()
-#
-#     pygame.quit()
-
-
 class Game:
     def __init__(self, wave=0):
         self.state = GameState.SETUP
@@ -66,6 +23,9 @@ class Game:
         self.enemies: List[BaseCharacter] = []
         self.selected_unit = None
         self.result_text = ""
+        self.player_grid = [
+            [0 for _ in range(HEIGHT // GRID_SIZE)] for _ in range(WIDTH // GRID_SIZE)
+        ]
 
     def spawn_wave(self):
         self.wave += 1
@@ -87,8 +47,8 @@ class Game:
         pygame.init()
         font = pygame.font.Font(None, 74)
         screen = pygame.display.set_mode((WIDTH, HEIGHT))
+        pygame.display.set_caption("LevelUP Saga")
         clock = pygame.time.Clock()
-        dragging = False
 
         while True:
             dt = clock.tick(24) / 1000.0
@@ -130,36 +90,48 @@ class Game:
                     pos = pygame.mouse.get_pos()
                     grid_x = pos[0] // GRID_SIZE
                     grid_y = pos[1] // GRID_SIZE
+                    print(grid_x, grid_y)
 
-                    # Sprawdź, czy miejsce należy do strefy gracza
-                    if PLAYER_AREA[0] <= grid_x < PLAYER_AREA[0] + PLAYER_AREA[2]:
-                        if PLAYER_AREA[1] <= grid_y < PLAYER_AREA[1] + PLAYER_AREA[3]:
-                            self.selected_unit = BaseCharacter(
-                                grid_x, grid_y, COLORS["ally"]
-                            )
-                            self.selected_unit.attack += self.wave
-                            self.selected_unit.rect.center = pos
-                            dragging = True
-
-                elif event.type == pygame.MOUSEMOTION and dragging:
-                    self.selected_unit.rect.center = event.pos
-
-                elif event.type == pygame.MOUSEBUTTONUP and dragging:
-                    # Sprawdź prawidłową pozycję
-                    grid_x = self.selected_unit.rect.x // GRID_SIZE
-                    grid_y = self.selected_unit.rect.y // GRID_SIZE
+                    self.selected_unit = BaseCharacter(grid_x, grid_y, COLORS["ally"])
+                    self.selected_unit.attack += self.wave
 
                     if (
                         PLAYER_AREA[0] <= grid_x < PLAYER_AREA[0] + PLAYER_AREA[2]
                         and PLAYER_AREA[1] <= grid_y < PLAYER_AREA[1] + PLAYER_AREA[3]
+                        and self.player_grid[grid_x - PLAYER_AREA[0]][
+                            grid_y - PLAYER_AREA[1]
+                        ]
+                        == 0
                     ):
                         self.allies.append(self.selected_unit)
+                        self.player_grid[grid_x - PLAYER_AREA[0]][
+                            grid_y - PLAYER_AREA[1]
+                        ] = self.selected_unit.id
+
+                    elif (
+                        self.player_grid[grid_x - PLAYER_AREA[0]][
+                            grid_y - PLAYER_AREA[1]
+                        ]
+                        != 0
+                    ):
+                        # Usuń jednostkę z listy
+                        self.allies = [
+                            a
+                            for a in self.allies
+                            if a.id
+                            != self.player_grid[grid_x - PLAYER_AREA[0]][
+                                grid_y - PLAYER_AREA[1]
+                            ]
+                        ]
+                        self.player_grid[grid_x - PLAYER_AREA[0]][
+                            grid_y - PLAYER_AREA[1]
+                        ] = 0
                     else:
                         # Nieprawidłowa pozycja - anuluj
+                        print("Invalid position")
                         pass
 
                     self.selected_unit = None
-                    dragging = False
 
                 elif event.type == pygame.KEYDOWN:
                     if event.key == pygame.K_SPACE and self.state == GameState.SETUP:
@@ -171,9 +143,14 @@ class Game:
                     ):
                         self.__init__()
                         continue
-                    elif event.key == pygame.K_c and self.state == GameState.VICTORY:
+                    elif (
+                        event.key == pygame.K_SPACE and self.state == GameState.VICTORY
+                    ):
                         self.__init__(self.wave)
                         continue
+                    elif event.key == pygame.K_ESCAPE:
+                        pygame.quit()
+                        return
 
             # Logika gry
             if self.state == GameState.BATTLE:
@@ -213,7 +190,7 @@ class Game:
                     text, (WIDTH // 2 - text.get_width() // 2, HEIGHT // 2 + 50)
                 )
                 if self.state == GameState.VICTORY:
-                    text = font.render("PRESS C TO CONTINUE", True, COLORS["text"])
+                    text = font.render("PRESS SPACE TO CONTINUE", True, COLORS["text"])
                     screen.blit(
                         text, (WIDTH // 2 - text.get_width() // 2, HEIGHT // 2 + 100)
                     )
