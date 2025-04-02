@@ -19,16 +19,32 @@ class GameState(EnumMeta):
 
 
 class Game:
-    def __init__(self, wave=0):
+    def __init__(self, wave=0, player_grid=None):
         self.state = GameState.SETUP
         self.wave = wave
         self.allies: List[BaseCharacter] = []
         self.enemies: List[BaseCharacter] = []
         self.selected_unit = None
         self.result_text = ""
-        self.player_grid = [
-            [0 for _ in range(HEIGHT // GRID_SIZE)] for _ in range(WIDTH // GRID_SIZE)
-        ]
+
+        self.player_grid = player_grid
+
+
+        # Part fo the code that will save a player configuration between waves
+        if self.player_grid is None:
+            self.player_grid = [
+                [0 for _ in range(HEIGHT // GRID_SIZE)]
+                for _ in range(WIDTH // GRID_SIZE)
+            ]
+
+        for x in range(len(self.player_grid)):
+            for y in range(len(self.player_grid[x])):
+                if self.player_grid[x][y] != 0:
+                    to_add_unit = BaseCharacter(
+                        x + PLAYER_AREA[0], y + PLAYER_AREA[1], COLORS["ally"]
+                    )
+                    self.allies.append(to_add_unit)
+                    self.player_grid[x][y] = to_add_unit.id
 
     def spawn_wave(self):
         self.wave += 1
@@ -154,7 +170,7 @@ class Game:
                     elif (
                         event.key == pygame.K_SPACE and self.state == GameState.VICTORY
                     ):
-                        self.__init__(self.wave)
+                        self.__init__(self.wave, self.player_grid)
                         continue
                     elif event.key == pygame.K_ESCAPE:
                         pygame.quit()
