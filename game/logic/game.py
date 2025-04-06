@@ -19,7 +19,7 @@ class GameState(EnumMeta):
 
 
 class Game:
-    def __init__(self, wave=0, player_grid=None):
+    def __init__(self, wave=1, player_grid=None):
         self.state = GameState.SETUP
         self.wave = wave
         self.allies: List[BaseCharacter] = []
@@ -47,7 +47,6 @@ class Game:
                     self.player_grid[x][y] = to_add_unit.id
 
     def spawn_wave(self):
-        self.wave += 1
         num_enemies = 3 + self.wave
         for _ in range(num_enemies):
             x = random.randint(ENEMY_AREA[0], ENEMY_AREA[0] + ENEMY_AREA[2] - 1)
@@ -64,6 +63,7 @@ class Game:
         if not self.enemies:
             self.result_text = "VICTORY!"
             self.state = GameState.VICTORY
+            self.wave += 1
         elif not self.allies:
             self.result_text = "DEFEAT!"
             self.state = GameState.LOST
@@ -199,9 +199,19 @@ class Game:
                 self.selected_unit.draw(screen)
 
             # Teksty
+            ally_count = len(self.allies)
+            enemy_count = len(self.enemies)
+            text = font.render(
+                f"Wave: {self.wave} - Allies: {ally_count} - Enemies: {enemy_count}",
+                True,
+                COLORS["text"],
+            )
+
+            screen.blit(text, (WIDTH // 2 - text.get_width() // 2, 10))
+
             if self.state == GameState.SETUP:
                 text = font.render(
-                    f"WAVE {self.wave + 1} - PRESS SPACE TO START", True, COLORS["text"]
+                    f"PRESS SPACE TO START", True, COLORS["text"]
                 )
                 screen.blit(text, (WIDTH // 2 - text.get_width() // 2, HEIGHT - 100))
             elif self.state in (GameState.LOST, GameState.VICTORY):
